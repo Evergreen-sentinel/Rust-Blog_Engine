@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Engine</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #111318;
+            color: #fff;
+        }
+        .item {
+            background-color: #37393e;
+            border-color: #37393e;
+            color: #fff;
+        }
+        .item h2 a{
+            color: #fff;
+        }
+        .item p{
+            color: #fff;
+        }
+        .label{
+            color: #fff;
+        }
+        .container-fluid {
+            max-height: calc(100vh - 60px);
+            overflow-y: hidden;
+            padding-top: 10px;
+        }
+        .category-list, .leftCont, .rightCont {
+            overflow-y: auto;
+            height: calc(100vh - 120px);
+        }
+        .category-list{
+            width: 200px;
+        }
+        .box {
+            height: calc(100vh - 180px);
+            overflow-y: auto;
+        }
+        .category-item {
+            cursor: pointer;
+            padding: 10px;
+            color: #ffffff;
+            border-bottom: 1px solid #44474e;
+        }
+        .category-item:hover {
+            background-color: #44474e;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="index.html">Blog Engine</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="upload.html">Upload</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3 px-3">
+                <h1 class="text-center">Categories</h1>
+                <div id="category-list" class="category-list"></div>
+            </div>
+
+            <div class="col-md-5 px-3">
+                <h1 class="text-center">RSS Feed</h1>
+                <div id="rss-feed" class="leftCont"></div>
+            </div>
+    
+            <div class="col-md-4 px-3">
+                <h1 class="text-center">Blog Posts</h1>
+                <div class="box">
+                    <iframe id="post-iframe" class="w-100 border-0" style="height: 100%;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        const categories = ["Science & Technology", "Economy", "Arts & Culture", "Health", "Entertainment"];
+        let selectedCategory = null;
+
+        function loadCategories() {
+        const categoryList = document.getElementById('category-list');
+        categories.forEach(category => {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'category-item';
+            categoryDiv.innerHTML = `<a href="#">${category}</a>`;
+            categoryDiv.onclick = () => filterFeedByCategory(category);
+            categoryList.appendChild(categoryDiv);
+        });
+    }
+        async function fetchRss() {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/rss');
+                const data = await response.json();
+                renderRssFeed(data.channel.item);
+            } catch (error) {
+                console.error('Error fetching RSS feed:', error);
+            }
+        }
+
+        function renderRssFeed(items) {
+        const feedContainer = document.getElementById('rss-feed');
+        feedContainer.innerHTML = '';
+        items.forEach(item => {
+            if (!selectedCategory || item.category === selectedCategory) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'card item mb-3 p-3';
+                itemDiv.innerHTML = `
+                    <h2 class="h5"><a href="${item.link}" target="_blank">${item.title}</a></h2>
+                    <p>${item.description}</p>
+                `;
+                feedContainer.appendChild(itemDiv);
+            }
+        });
+    }
+        function filterFeedByCategory(category) {
+        selectedCategory = category; 
+        fetchRss(); 
+    }
+        async function fetchPosts() {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/posts');
+                const posts = await response.json();
+                const boxContainer = document.querySelector('.box');
+                boxContainer.innerHTML = '';
+                posts.forEach((postHtml) => {
+                    const postDiv = document.createElement('div');
+                    postDiv.className = 'card item mb-3 p-3';
+                    postDiv.innerHTML = postHtml;
+                    boxContainer.appendChild(postDiv);
+                });
+                if (posts.length === 0) {
+                    boxContainer.innerHTML = '<p class="text-center">No blog posts available.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching blog posts:', error);
+            }
+        }
+        loadCategories();
+        fetchRss();
+        fetchPosts();
+    </script>
+</body>
+</html>

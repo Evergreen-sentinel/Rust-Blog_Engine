@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Engine: upload</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #111318;
+            color: #fff;
+        }
+        label, .navbar-brand, .nav-link {
+            color: #fff;
+        }
+        .container {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Upload File</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Home</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h1 class="text-center">Upload Markdown File</h1>
+                <form action="/upload" method="post" enctype="multipart/form-data" class="text-center mb-3">
+                    <label for="file">Upload Markdown File:</label>
+                    <input type="file" id="file" name="file" accept=".md" class="form-control-file" required>
+                    <button type="submit" class="btn btn-primary mt-2">Upload</button>
+                </form>
+            </div>
+
+            <div class="col-md-6">
+                <h1 class="text-center">Add RSS Link</h1>
+                <form id="rss-form" class="text-center mb-3">
+                    <label for="rss-url">RSS URL:</label>
+                    <input type="url" id="rss-url" name="rss-url" class="form-control" placeholder="Enter RSS URL" required>
+                    <button type="submit" class="btn btn-primary mt-2">Add RSS</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById('rss-form').addEventListener('submit', async (event) => {
+            event.preventDefault(); 
+            const rssUrl = document.getElementById('rss-url').value; 
+            const response = await fetch('/add_rss', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: rssUrl })
+            });
+    
+            if (response.ok) {
+                alert('RSS link added successfully!');
+                document.getElementById('rss-form').reset(); 
+            } else {
+                alert('Failed to add RSS link.');
+            }
+        });
+    
+        const markdownForm = document.querySelector('form[action="/upload"]');
+        markdownForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); 
+            const formData = new FormData(markdownForm);
+            const response = await fetch(markdownForm.action, {
+                method: markdownForm.method,
+                body: formData,
+            });
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                const errorMessage = await response.json();
+                alert(errorMessage);
+            }
+        });
+    </script>
+</body>
+</html>
